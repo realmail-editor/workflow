@@ -24,4 +24,5 @@ export enum ActionType {
   HTTP = 'http',
   Condition = 'condition',
   FOREACH = 'foreach',
+  DELAY = 'delay',
 }

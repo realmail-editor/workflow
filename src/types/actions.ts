@@ -7,7 +7,7 @@ export interface IAction<T extends Record<string, any> = Record<string, any>> {
   data: {
     id: string;
     name: string;
-    description: string;
+    description?: string;
   } & T;
 }
 
@@ -30,4 +30,7 @@ export type ICondition = IAction<{
 
 export type IForEach = IAction<{
   steps: IAction[];
+}>;
+export type IDelay = IAction<{
+  seconds: number;
 }>;

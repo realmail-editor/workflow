@@ -4,6 +4,7 @@ import { IActionParams, IHttp } from "../types";
 
 
 export async function Http(params: IActionParams<IHttp>): Promise<any> {
+  console.log('Http start',);
 
   try {
     const { action: { data } } = params;
@@ -13,11 +14,13 @@ export async function Http(params: IActionParams<IHttp>): Promise<any> {
       url: data.url,
       data: data.body
     })
+    console.log('Http end success',);
     return {
       status: response.status,
       data: response.data
     }
   } catch (error: any) {
+    console.log('Http end error', error);
     await Context.current().cancelled;
     return {
       status: error.response.status,
