@@ -1,7 +1,6 @@
 import { WorkflowClient } from '@temporalio/client';
-import { ActionType } from './types';
 import { DSLInterpreter } from './workflows';
-import { template } from './template'
+import { template } from './template';
 import { nanoid } from 'nanoid';
 
 
@@ -10,7 +9,7 @@ async function run() {
   // Invoke the `DSLInterpreter` Workflow, only resolved when the workflow completes
   await client.execute(DSLInterpreter, {
     args: [template],
-    taskQueue: 'dsl-interpreter',
+    taskQueue: 'dsl-interpreter-v1',
     workflowId: nanoid(),
   });
 }

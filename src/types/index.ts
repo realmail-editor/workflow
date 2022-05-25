@@ -8,16 +8,16 @@ export type DSL = {
 };
 
 export type ActionResponse = {
-  result: Record<string, any>
-  results: Record<string, any>
-}
+  prevResult: Record<string, any>;
+  results: Record<string, any>;
+};
 
 export interface IActionParams<T extends IAction = IAction> {
   action: T,
   payload: {
-    result: Record<string, any>;
+    prevResult: Record<string, any>;
     results: Record<string, any>;
-  }
+  };
 }
 
 export enum ActionType {
@@ -25,4 +25,6 @@ export enum ActionType {
   Condition = 'condition',
   FOREACH = 'foreach',
   DELAY = 'delay',
+  FILTER = 'filter',
+  CONDITION = 'condition',
 }

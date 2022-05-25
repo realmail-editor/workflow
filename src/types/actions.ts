@@ -28,6 +28,11 @@ export type ICondition = IAction<{
   condition: Expression;
 }>;
 
+
+export type IFilter = IAction<{
+  condition: Expression;
+}>;
+
 export type IForEach = IAction<{
   steps: IAction[];
 }>;

@@ -5,7 +5,7 @@ async function run() {
   const worker = await Worker.create({
     workflowsPath: require.resolve('./workflows'),
     activities: actions,
-    taskQueue: 'dsl-interpreter',
+    taskQueue: 'dsl-interpreter-v1',
   });
   await worker.run();
 }

@@ -1,8 +1,16 @@
 import { proxyActivities } from '@temporalio/workflow';
+import jsonata from 'jsonata';
+
+import { Liquid } from 'liquidjs';
+
 import type { actions } from './actions';
 import { ActionResponse, DSL, IAction } from './types';
 import { isConditionAction } from './utils/isConditionAction';
+import { isFilterAction } from './utils/isFilterAction';
 import { isForEachAction } from './utils/isForEach';
+
+const engine = new Liquid();
+
 
 
 const acts = proxyActivities<typeof actions>({
@@ -10,17 +18,36 @@ const acts = proxyActivities<typeof actions>({
 });
 
 export async function DSLInterpreter(dsl: DSL) {
+
   const bindings = dsl.variables;
+  console.log('start workflow');
+
   for (const childAction of dsl.elements) {
-    await execute(childAction, bindings);
+    const next = await execute(childAction, bindings);
+    if (!next) break;
   }
+  console.log('end workflow');
 }
 
-async function execute(action: IAction, bindings: ActionResponse): Promise<void> {
+async function execute(action: IAction, bindings: ActionResponse): Promise<boolean> {
+  const tpl = engine.parse(JSON.stringify(action));
+  const actionWithData = JSON.parse(engine.renderSync(tpl, bindings));
+  console.log('bindings', bindings);
+
+  const actionResult = await acts[action.type]({
+    action: actionWithData,
+    payload: bindings
+  });
+
+  if (isFilterAction(action)) {
+    if (!actionResult) return false;
+  }
+
   if (isConditionAction(action)) {
-    const childActions = action.data.condition ? action.data.truthy : action.data.falsy;
+    const childActions = actionResult ? action.data.truthy : action.data.falsy;
     for (const childAction of childActions) {
-      await execute(childAction, bindings);
+      const next = await execute(childAction, bindings);
+      if (!next) break;
     }
   }
 
@@ -29,16 +56,11 @@ async function execute(action: IAction, bindings: ActionResponse): Promise<void>
     await Promise.all(childActions.map((el) => execute(el, bindings)));
   }
 
-  const actionResult = await acts[action.type]({
-    action: action,
-    payload: bindings
-  })
-  console.log(actionResult);
-
-  bindings.result = actionResult;
+  bindings.prevResult = actionResult;
   bindings.results = {
     ...bindings.results,
     [action.data.id]: actionResult
   };
 
+  return true;
 }
