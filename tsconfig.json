@@ -1,12 +1,21 @@
 {
-  "extends": "@tsconfig/node16/tsconfig.json",
-  "version": "4.4.2",
   "compilerOptions": {
+    "module": "commonjs",
     "declaration": true,
-    "declarationMap": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "es2017",
     "sourceMap": true,
-    "rootDir": "./src",
-    "outDir": "./lib"
-  },
-  "include": ["src/**/*.ts"]
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": false,
+    "noFallthroughCasesInSwitch": false
+  }
 }

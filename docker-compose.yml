@@ -6,20 +6,20 @@ version: "3.5"
 services:
   ## uncomment if you need search attributes feature
   ## dont forget to uncomment the ES related comments in the temporal service
-  # elasticsearch:
-  #   container_name: temporal-elasticsearch
-  #   environment:
-  #     - cluster.routing.allocation.disk.threshold_enabled=true
-  #     - cluster.routing.allocation.disk.watermark.low=512mb
-  #     - cluster.routing.allocation.disk.watermark.high=256mb
-  #     - cluster.routing.allocation.disk.watermark.flood_stage=128mb
-  #     - discovery.type=single-node
-  #     - ES_JAVA_OPTS=-Xms100m -Xmx100m
-  #   image: elasticsearch:7.10.1
-  #   # networks:
-  #     # - temporal-network
-  #   ports:
-  #     - 9200:9200
+  elasticsearch:
+    container_name: temporal-elasticsearch
+    environment:
+      - cluster.routing.allocation.disk.threshold_enabled=true
+      - cluster.routing.allocation.disk.watermark.low=512mb
+      - cluster.routing.allocation.disk.watermark.high=256mb
+      - cluster.routing.allocation.disk.watermark.flood_stage=128mb
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms100m -Xmx100m
+    image: elasticsearch:7.10.1
+    # networks:
+      # - temporal-network
+    ports:
+      - 9200:9200
   postgresql:
     container_name: temporal-postgresql
     environment:
@@ -34,7 +34,7 @@ services:
     container_name: temporal
     depends_on:
       - postgresql
-    #  - elasticsearch
+      - elasticsearch
     environment:
       - DB=postgresql
       - DB_PORT=5432
@@ -42,9 +42,9 @@ services:
       - POSTGRES_PWD=temporal
       - POSTGRES_SEEDS=postgresql
       - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development_es.yaml
-    #  - ENABLE_ES=true
-    #  - ES_SEEDS=elasticsearch
-    #  - ES_VERSION=v7
+      - ENABLE_ES=true
+      - ES_SEEDS=elasticsearch
+      - ES_VERSION=v7
     # https://github.com/temporalio/temporal/issues/2539
     image: temporalio/auto-setup:1.13.4
     # networks:
