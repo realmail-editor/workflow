@@ -1,18 +1,16 @@
 {
-  "name": "temporal-dsl-interpreter",
+  "name": "workflow",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
-    "start:dev": "nest start --watch",
+    "dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "build.watch": "tsc --build --watch",
     "lint": "eslint .",
     "start.watch": "nodemon src/worker.ts",
-    "workflow": "ts-node workflow/client.ts",
     "worker": "ts-node workflow/worker.ts"
   },
   "nodemonConfig": {

@@ -1,9 +1,4 @@
+import { WorkflowClient } from '@temporalio/client';
+import { DSLInterpreter } from '../workflows';
 import { DSL } from '../types';
-export declare function runFlow(template: DSL): Promise<{
-    current: {
-        id: string;
-        name: string;
-        description?: string;
-    } & Record<string, any>;
-    actions: import("../types").ActionResponse;
-}>;
+export declare function runFlow(client: WorkflowClient, template: DSL): Promise<import("@temporalio/client").WorkflowHandleWithRunId<typeof DSLInterpreter>>;

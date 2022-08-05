@@ -19,14 +19,10 @@ async function DSLInterpreter(dsl) {
     let currentStep = dsl.elements[0];
     for (const childAction of dsl.elements) {
         currentStep = childAction;
-        const next = await execute(acts, childAction, bindings);
-        if (!next)
+        const response = await execute(acts, childAction, bindings);
+        if (response.error)
             break;
     }
-    console.log('', {
-        current: currentStep.data,
-        actions: bindings,
-    });
     return {
         current: currentStep.data,
         actions: bindings,
@@ -34,39 +30,46 @@ async function DSLInterpreter(dsl) {
 }
 exports.DSLInterpreter = DSLInterpreter;
 async function execute(acts, action, bindings) {
+    let hasError = false;
     const tpl = engine.parse(JSON.stringify(action));
     const actionWithData = JSON.parse(engine.renderSync(tpl, bindings));
     const actionResult = await acts[action.type]({
         action: actionWithData,
         payload: bindings,
     });
-    bindings.prevResult = actionResult;
-    bindings.results = Object.assign(Object.assign({}, bindings.results), { [action.data.id]: actionResult });
     if ((0, isHttpAction_1.isHttpAction)(action)) {
         const httpResult = actionResult;
         const httpPayload = actionWithData;
         if (httpPayload.data.expected_codes.length === 0 ||
             httpPayload.data.expected_codes.includes(httpResult.status)) {
-            return true;
+            hasError = true;
         }
-        return false;
     }
-    if ((0, isFilterAction_1.isFilterAction)(action)) {
-        if (!actionResult)
-            return false;
+    else if ((0, isFilterAction_1.isFilterAction)(action)) {
+        hasError = !actionResult;
     }
-    if ((0, isConditionAction_1.isConditionAction)(action)) {
+    else if ((0, isConditionAction_1.isConditionAction)(action)) {
         const childActions = actionResult ? action.data.truthy : action.data.falsy;
         for (const childAction of childActions) {
             const next = await execute(acts, childAction, bindings);
-            if (!next)
+            if (!next) {
+                hasError = true;
                 break;
+            }
         }
     }
-    if ((0, isForEach_1.isForEachAction)(action)) {
+    else if ((0, isForEach_1.isForEachAction)(action)) {
         const childActions = action.data.steps;
         await Promise.all(childActions.map((el) => execute(acts, el, bindings)));
     }
-    return true;
+    if (!hasError) {
+        bindings.prevResult = actionResult;
+        bindings.results = Object.assign(Object.assign({}, bindings.results), { [action.data.id]: actionResult });
+    }
+    return {
+        error: hasError,
+        output: actionResult,
+        input: bindings,
+    };
 }
 //# sourceMappingURL=workflows.js.map

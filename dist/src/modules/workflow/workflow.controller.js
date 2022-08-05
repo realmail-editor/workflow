@@ -14,8 +14,10 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WorkflowController = void 0;
 const common_1 = require("@nestjs/common");
-const getTemporalClient_1 = require("./utils/getTemporalClient");
+const getTemporalClient_1 = require("../../../workflow/utils/getTemporalClient");
 const workflow_service_1 = require("./workflow.service");
+const template_1 = require("../../../workflow/template");
+const runFlow_1 = require("../../../workflow/utils/runFlow");
 let WorkflowController = class WorkflowController {
     constructor(appService) {
         this.appService = appService;
@@ -25,10 +27,29 @@ let WorkflowController = class WorkflowController {
             namespace: 'default',
         });
     }
+    async create() {
+        const response = await (0, runFlow_1.runFlow)(getTemporalClient_1.client, (0, template_1.makeTemplate)());
+        return {
+            runId: response.originalRunId,
+            workflowId: response.workflowId,
+        };
+    }
     id(workflowId) {
         return getTemporalClient_1.connection.service.getWorkflowExecutionHistory({
             execution: { workflowId },
+            namespace: 'default',
         });
+    }
+    runId(workflowId, runId) {
+        try {
+            return getTemporalClient_1.connection.service.getWorkflowExecutionHistory({
+                execution: { workflowId, runId: runId },
+                namespace: 'default',
+            });
+        }
+        catch (error) {
+            return new common_1.BadRequestException(error);
+        }
     }
 };
 __decorate([
@@ -38,12 +59,26 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], WorkflowController.prototype, "list", null);
 __decorate([
+    (0, common_1.Post)('/'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], WorkflowController.prototype, "create", null);
+__decorate([
     (0, common_1.Get)('/:id'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], WorkflowController.prototype, "id", null);
+__decorate([
+    (0, common_1.Get)('/:id/run/:run_id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Param)('run_id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], WorkflowController.prototype, "runId", null);
 WorkflowController = __decorate([
     (0, common_1.Controller)('/workflow'),
     __metadata("design:paramtypes", [workflow_service_1.WorkflowService])

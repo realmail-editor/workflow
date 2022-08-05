@@ -2,12 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.runFlow = void 0;
 const constants_1 = require("../constants");
-const client_1 = require("@temporalio/client");
 const workflows_1 = require("../workflows");
-async function runFlow(template) {
-    const client = new client_1.WorkflowClient();
+async function runFlow(client, template) {
     if (template.trigger.type === constants_1.FlowTriggerType.CRON_SCHEDULE) {
-        return client.execute(workflows_1.DSLInterpreter, {
+        return client.start(workflows_1.DSLInterpreter, {
             args: [template],
             taskQueue: 'automation-flow',
             workflowId: template.id,
@@ -15,7 +13,7 @@ async function runFlow(template) {
         });
     }
     else {
-        return client.execute(workflows_1.DSLInterpreter, {
+        return client.start(workflows_1.DSLInterpreter, {
             args: [template],
             taskQueue: 'automation-flow',
             workflowId: template.id,

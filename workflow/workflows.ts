@@ -25,13 +25,10 @@ export async function DSLInterpreter(dsl: DSL) {
 
   for (const childAction of dsl.elements) {
     currentStep = childAction;
-    const next = await execute(acts, childAction, bindings);
-    if (!next) break;
+    const response = await execute(acts, childAction, bindings);
+    if (response.error) break;
   }
-  console.log('', {
-    current: currentStep.data,
-    actions: bindings,
-  });
+
   return {
     current: currentStep.data,
     actions: bindings,
@@ -42,7 +39,12 @@ async function execute(
   acts: Record<string, (params: IActionParams<any>) => Promise<any>>,
   action: IAction,
   bindings: ActionResponse
-): Promise<boolean> {
+): Promise<{
+  error: boolean;
+  output: any;
+  input: any;
+}> {
+  let hasError = false;
   const tpl = engine.parse(JSON.stringify(action));
   const actionWithData = JSON.parse(
     engine.renderSync(tpl, bindings)
@@ -53,12 +55,6 @@ async function execute(
     payload: bindings,
   });
 
-  bindings.prevResult = actionResult;
-  bindings.results = {
-    ...bindings.results,
-    [action.data.id]: actionResult,
-  };
-
   if (isHttpAction(action)) {
     const httpResult = actionResult as { status: number };
     const httpPayload = actionWithData;
@@ -66,27 +62,34 @@ async function execute(
       httpPayload.data.expected_codes.length === 0 ||
       httpPayload.data.expected_codes.includes(httpResult.status)
     ) {
-      return true;
+      hasError = true;
     }
-    return false;
-  }
-
-  if (isFilterAction(action)) {
-    if (!actionResult) return false;
-  }
-
-  if (isConditionAction(action)) {
+  } else if (isFilterAction(action)) {
+    hasError = !actionResult;
+  } else if (isConditionAction(action)) {
     const childActions = actionResult ? action.data.truthy : action.data.falsy;
     for (const childAction of childActions) {
       const next = await execute(acts, childAction, bindings);
-      if (!next) break;
+      if (!next) {
+        hasError = true;
+        break;
+      }
     }
-  }
-
-  if (isForEachAction(action)) {
+  } else if (isForEachAction(action)) {
     const childActions = action.data.steps;
     await Promise.all(childActions.map((el) => execute(acts, el, bindings)));
   }
 
-  return true;
+  if (!hasError) {
+    bindings.prevResult = actionResult;
+    bindings.results = {
+      ...bindings.results,
+      [action.data.id]: actionResult,
+    };
+  }
+  return {
+    error: hasError,
+    output: actionResult,
+    input: bindings,
+  };
 }

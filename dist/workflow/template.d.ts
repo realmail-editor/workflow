@@ -1,2 +1,2 @@
 import { DSL } from './types';
-export declare const template: DSL;
+export declare const makeTemplate: () => DSL;
